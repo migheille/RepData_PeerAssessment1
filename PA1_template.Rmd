@@ -1,0 +1,95 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+### Loading and peaking into the data
+
+```{r}
+
+unzip(zipfile = "activity.zip")
+data <- read.csv("activity.csv")
+
+
+```
+
+### Processing: removing NA from data
+
+```{r}
+
+good <- complete.cases(data)
+data <- data[good,] 
+
+head(data)
+
+```
+
+
+### Calculate the total number of steps taken per day
+
+```{r}
+
+steps_per_day <- aggregate(data$steps, by=list(day = data$date), "sum")
+head(steps_per_day)
+
+
+```
+
+
+### Make a histogram of the total number of steps taken each day
+
+```{r}
+
+hist(steps_per_day$x, main="Histogram", xlab="Steps per day")
+ 
+```
+
+### Calculate and report the mean and median of the total number of steps taken per day
+
+```{r}
+mean(steps_per_day$x)
+median(steps_per_day$x)
+```
+
+
+## What is the average daily activity pattern?
+
+ 
+Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```{r}
+
+require(graphics)
+
+activity <- aggregate( formula = steps~interval, 
+           data = data,
+           FUN = mean)
+
+
+
+head(activity)
+ 
+  
+plot(activity , type="l") 
+
+active_interval <- activity[which.max(activity$steps),]
+
+active_interval
+
+hr <- active_interval / 60
+
+hr
+
+```
+
+### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+
+## Imputing missing values
+
+
+
+## Are there differences in activity patterns between weekdays and weekends?
