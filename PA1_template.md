@@ -6,15 +6,15 @@
 
 ```r
 unzip(zipfile = "activity.zip")
-data <- read.csv("activity.csv")
+raw_data <- read.csv("activity.csv")
 ```
 
 ### Processing: removing NA from data
 
 
 ```r
-good <- complete.cases(data)
-data <- data[good,] 
+good <- complete.cases(raw_data)
+data <- raw_data[good,] 
 
 head(data)
 ```
@@ -91,8 +91,6 @@ activity <- aggregate( formula = steps~interval,
            data = data,
            FUN = mean)
 
-
-
 head(activity)
 ```
 
@@ -111,6 +109,9 @@ plot(activity , type="l")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
 
 ```r
 active_interval <- activity[which.max(activity$steps),]
@@ -134,11 +135,73 @@ hr
 ## 104 13.91667 3.436164
 ```
 
-### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-
-
 ## Imputing missing values
 
+Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
 
 
+```r
+total_na <- sum(is.na(raw_data$steps))
+
+total_na
+```
+
+```
+## [1] 2304
+```
+
+filling data for the mean for that 5-minute interval, etc.
+
+
+```r
+fill.value <- function(steps, interval) {
+    filled <- NA
+    if (!is.na(steps)) 
+        filled <- c(steps) else filled <-  activity$steps[ which(activity$interval == interval )]
+    return(filled)
+}
+
+new_data <- raw_data
+
+head(new_data)
+```
+
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
+```
+
+```r
+new_data$steps <- mapply(fill.value, new_data$steps, new_data$interval)
+
+head(new_data)
+```
+
+```
+##       steps       date interval
+## 1 1.7169811 2012-10-01        0
+## 2 0.3396226 2012-10-01        5
+## 3 0.1320755 2012-10-01       10
+## 4 0.1509434 2012-10-01       15
+## 5 0.0754717 2012-10-01       20
+## 6 2.0943396 2012-10-01       25
+```
+
+```r
+par(mfrow = c(2, 1))   
+
+new_activity <- aggregate( formula = new_data$steps~new_data$interval, 
+           data = new_data,
+           FUN = mean)
+
+plot(activity, type="l")
+plot(new_activity, type="l")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 ## Are there differences in activity patterns between weekdays and weekends?

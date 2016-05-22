@@ -11,7 +11,7 @@ output:
 ```{r}
 
 unzip(zipfile = "activity.zip")
-data <- read.csv("activity.csv")
+raw_data <- read.csv("activity.csv")
 
 
 ```
@@ -20,8 +20,8 @@ data <- read.csv("activity.csv")
 
 ```{r}
 
-good <- complete.cases(data)
-data <- data[good,] 
+good <- complete.cases(raw_data)
+data <- raw_data[good,] 
 
 head(data)
 
@@ -68,13 +68,15 @@ activity <- aggregate( formula = steps~interval,
            data = data,
            FUN = mean)
 
-
-
 head(activity)
- 
-  
+
 plot(activity , type="l") 
 
+```
+
+### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
 active_interval <- activity[which.max(activity$steps),]
 
 active_interval
@@ -82,14 +84,47 @@ active_interval
 hr <- active_interval / 60
 
 hr
-
 ```
-
-### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-
 
 ## Imputing missing values
 
+Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
 
+```{r}
 
+total_na <- sum(is.na(raw_data$steps))
+
+total_na
+
+```
+
+filling data for the mean for that 5-minute interval, etc.
+
+```{r}
+
+fill.value <- function(steps, interval) {
+    filled <- NA
+    if (!is.na(steps)) 
+        filled <- c(steps) else filled <-  activity$steps[ which(activity$interval == interval )]
+    return(filled)
+}
+
+new_data <- raw_data
+
+head(new_data)
+
+new_data$steps <- mapply(fill.value, new_data$steps, new_data$interval)
+
+head(new_data)
+
+par(mfrow = c(2, 1))   
+
+new_activity <- aggregate( formula = new_data$steps~new_data$interval, 
+           data = new_data,
+           FUN = mean)
+
+plot(activity, type="l")
+plot(new_activity, type="l")
+
+``` 
 ## Are there differences in activity patterns between weekdays and weekends?
