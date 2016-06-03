@@ -13,7 +13,6 @@ output:
 unzip(zipfile = "activity.zip")
 raw_data <- read.csv("activity.csv")
 
-
 ```
 
 ### Processing: removing NA from data
@@ -35,7 +34,6 @@ head(data)
 steps_per_day <- aggregate(data$steps, by=list(day = data$date), "sum")
 head(steps_per_day)
 
-
 ```
 
 
@@ -49,13 +47,20 @@ hist(steps_per_day$x, main="Histogram", xlab="Steps per day")
 
 ### Calculate and report the mean and median of the total number of steps taken per day
 
+#### Mean 
+
 ```{r}
 mean(steps_per_day$x)
+```
+
+#### Median 
+
+```{r}
 median(steps_per_day$x)
 ```
 
 
-## What is the average daily activity pattern?
+### What is the average daily activity pattern?
 
  
 Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
@@ -68,8 +73,10 @@ activity <- aggregate( formula = steps~interval,
            data = data,
            FUN = mean)
 
+#peak into the data
 head(activity)
 
+#show plot
 plot(activity , type="l") 
 
 ```
@@ -77,16 +84,21 @@ plot(activity , type="l")
 ### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 ```{r}
+#get the active interval
 active_interval <- activity[which.max(activity$steps),]
 
+#print the interval
 active_interval
 
+#get the hour
 hr <- active_interval / 60
 
+#this could need converting into hh:mm, but I guess for purpose of homework, this is enough
 hr
+
 ```
 
-## Imputing missing values
+### Imputing missing values
 
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
 
@@ -98,7 +110,7 @@ total_na
 
 ```
 
-filling data for the mean for that 5-minute interval, etc.
+###  Fill the missing values data
 
 ```{r}
 
@@ -111,20 +123,49 @@ fill.value <- function(steps, interval) {
 
 new_data <- raw_data
 
-head(new_data)
-
 new_data$steps <- mapply(fill.value, new_data$steps, new_data$interval)
-
-head(new_data)
-
-par(mfrow = c(2, 1))   
 
 new_activity <- aggregate( formula = new_data$steps~new_data$interval, 
            data = new_data,
            FUN = mean)
 
 plot(activity, type="l")
+
 plot(new_activity, type="l")
+```
+
+### Are there differences in activity patterns between weekdays and weekends?
+
+```{r}
+add_week_flag <- function(date) {
+    day <- weekdays(date)
+    if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")) 
+        return("midweek") else if (day %in% c("Saturday", "Sunday")) 
+        return("weekend") else stop("invalid date")
+}
+
+new_data$date <- as.Date(new_data$date)
+
+new_data$day <- sapply(new_data$date, FUN = add_week_flag)
+
+## I haven't completed the full R course yet, there has to be a better way to do this.
+midweek_data <- subset(new_data, day=="midweek")
+
+weekend_data <- subset(new_data, day=="weekend")
+
+
+##head(weekend_data , 5000L)
+ 
+activity_midweek <- aggregate( formula = steps~interval, 
+           data= midweek_data,
+           FUN = mean)
+
+plot(activity_midweek , type = "l")
+
+activity_weekend <- aggregate( formula = steps~interval, 
+           data= weekend_data,
+           FUN = mean)
+
+plot(activity_weekend, type = "l" )
 
 ``` 
-## Are there differences in activity patterns between weekdays and weekends?

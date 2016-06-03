@@ -60,6 +60,8 @@ hist(steps_per_day$x, main="Histogram", xlab="Steps per day")
 
 ### Calculate and report the mean and median of the total number of steps taken per day
 
+#### Mean 
+
 
 ```r
 mean(steps_per_day$x)
@@ -68,6 +70,9 @@ mean(steps_per_day$x)
 ```
 ## [1] 10766.19
 ```
+
+#### Median 
+
 
 ```r
 median(steps_per_day$x)
@@ -78,7 +83,7 @@ median(steps_per_day$x)
 ```
 
 
-## What is the average daily activity pattern?
+### What is the average daily activity pattern?
 
  
 Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
@@ -91,6 +96,7 @@ activity <- aggregate( formula = steps~interval,
            data = data,
            FUN = mean)
 
+#peak into the data
 head(activity)
 ```
 
@@ -105,17 +111,20 @@ head(activity)
 ```
 
 ```r
+#show plot
 plot(activity , type="l") 
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 ### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 
 ```r
+#get the active interval
 active_interval <- activity[which.max(activity$steps),]
 
+#print the interval
 active_interval
 ```
 
@@ -125,8 +134,10 @@ active_interval
 ```
 
 ```r
+#get the hour
 hr <- active_interval / 60
 
+#this could need converting into hh:mm, but I guess for purpose of homework, this is enough
 hr
 ```
 
@@ -135,7 +146,7 @@ hr
 ## 104 13.91667 3.436164
 ```
 
-## Imputing missing values
+### Imputing missing values
 
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
 
@@ -150,7 +161,7 @@ total_na
 ## [1] 2304
 ```
 
-filling data for the mean for that 5-minute interval, etc.
+###  Fill the missing values data
 
 
 ```r
@@ -163,45 +174,61 @@ fill.value <- function(steps, interval) {
 
 new_data <- raw_data
 
-head(new_data)
-```
-
-```
-##   steps       date interval
-## 1    NA 2012-10-01        0
-## 2    NA 2012-10-01        5
-## 3    NA 2012-10-01       10
-## 4    NA 2012-10-01       15
-## 5    NA 2012-10-01       20
-## 6    NA 2012-10-01       25
-```
-
-```r
 new_data$steps <- mapply(fill.value, new_data$steps, new_data$interval)
-
-head(new_data)
-```
-
-```
-##       steps       date interval
-## 1 1.7169811 2012-10-01        0
-## 2 0.3396226 2012-10-01        5
-## 3 0.1320755 2012-10-01       10
-## 4 0.1509434 2012-10-01       15
-## 5 0.0754717 2012-10-01       20
-## 6 2.0943396 2012-10-01       25
-```
-
-```r
-par(mfrow = c(2, 1))   
 
 new_activity <- aggregate( formula = new_data$steps~new_data$interval, 
            data = new_data,
            FUN = mean)
 
 plot(activity, type="l")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+```r
 plot(new_activity, type="l")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
-## Are there differences in activity patterns between weekdays and weekends?
+![](PA1_template_files/figure-html/unnamed-chunk-10-2.png)<!-- -->
+
+### Are there differences in activity patterns between weekdays and weekends?
+
+
+```r
+add_week_flag <- function(date) {
+    day <- weekdays(date)
+    if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")) 
+        return("midweek") else if (day %in% c("Saturday", "Sunday")) 
+        return("weekend") else stop("invalid date")
+}
+
+new_data$date <- as.Date(new_data$date)
+
+new_data$day <- sapply(new_data$date, FUN = add_week_flag)
+
+## I haven't completed the full R course yet, there has to be a better way to do this.
+midweek_data <- subset(new_data, day=="midweek")
+
+weekend_data <- subset(new_data, day=="weekend")
+
+
+##head(weekend_data , 5000L)
+ 
+activity_midweek <- aggregate( formula = steps~interval, 
+           data= midweek_data,
+           FUN = mean)
+
+plot(activity_midweek , type = "l")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+```r
+activity_weekend <- aggregate( formula = steps~interval, 
+           data= weekend_data,
+           FUN = mean)
+
+plot(activity_weekend, type = "l" )
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-11-2.png)<!-- -->
